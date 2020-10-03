@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const multer = require('multer');
 const cors = require('cors');
-const secret = require('./client_secret_461156002118-s7j5f4c2c16hbu40smpof3usr6imr21m.apps.googleusercontent.com.json');
+const secret = require('./client_secret.json');
 const { file } = require('googleapis/build/src/apis/file');
 
 // Get client credentials and assigned to variables
@@ -23,7 +23,7 @@ auth_app.use(bodyParser.json());
 
 auth_app.get('/root', (req, res) => res.send('API Running'));
 
-auth_app.get('/', (req, res) => {
+auth_app.get('/authUrl', (req, res) => {
     const url = auth.generateAuthUrl({
         access_type: 'offline',
         scope: authScope,
@@ -31,7 +31,7 @@ auth_app.get('/', (req, res) => {
     return res.send(url);
 });
 
-auth_app.get('/getToken', (req, res) => {
+auth_app.post('/getToken', (req, res) => {
     if (req.body.code == null) {
         return res.status(400).send('Code not available');
     }
@@ -44,28 +44,12 @@ auth_app.get('/getToken', (req, res) => {
     });
 });
 
-// auth_app.post('/getUserProfile', (req, res) => {
-//     if (req.body.token == null) {
-//         return res.status(400).send('Token not available');
-//     }
-//     auth.setCredentials(req.body.token);
-//     const oAuth2 = google.oauth2({
-//         version: 'v2',
-//         auth: auth,
-//     });
-
-//     oAuth2.userinfo.get((error, response) => {
-//         if (error) {
-//             return res.status(400).send(error);
-//         }
-//         res.send(response.data);
-//     })
-// });
-
 auth_app.post('/uploadToDrive', (req, res) => {
-    var incomingForm = new formidable.incomingForm();
+    var incomingForm = new formidable.IncomingForm();
     incomingForm.parse(req, (error, fields, files) => {
+        console.log(files);
         if (error) {
+            console.log(error);
             return res.status(400).send(error);
         }
         const token = JSON.parse(fields.token);
@@ -93,7 +77,9 @@ auth_app.post('/uploadToDrive', (req, res) => {
             (error, file) => {
                 auth.setCredentials(null);
                 if (error) {
-                    res.status(400).send(error);
+                    console.log(error);
+                    // res.status(400).send(error);
+                    res.send('Token Expired')
                 }
                 else {
                     res.send('Successfully uploaded file');
