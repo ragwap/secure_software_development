@@ -1,15 +1,14 @@
+// Gather the using dependencies
 const express = require('express');
 const auth_app = express();
 const { google } = require('googleapis');
 const formidable = require('formidable');
 const bodyParser = require('body-parser');
 const fs = require('fs');
-const multer = require('multer');
 const cors = require('cors');
 const secret = require('./client_secret.json');
-const { file } = require('googleapis/build/src/apis/file');
 
-// Get client credentials and assigned to variables
+// Get client credentials and assign to variables
 const clientID = secret.web.client_id;
 const clientSecret = secret.web.client_secret;
 const redirectUris = secret.web.redirect_uris;
@@ -21,8 +20,7 @@ auth_app.use(cors());
 auth_app.use(bodyParser.urlencoded({ extended: false }));
 auth_app.use(bodyParser.json());
 
-auth_app.get('/root', (req, res) => res.send('API Running'));
-
+// Response of this get method will contain the URL to login to an account
 auth_app.get('/authUrl', (req, res) => {
     const url = auth.generateAuthUrl({
         access_type: 'offline',
@@ -31,6 +29,7 @@ auth_app.get('/authUrl', (req, res) => {
     return res.send(url);
 });
 
+// Once logged into the account and access is enabled with the help of the above get method, a token will be rendered in return by this post
 auth_app.post('/getToken', (req, res) => {
     if (req.body.code == null) {
         return res.status(400).send('Code not available');
@@ -44,10 +43,10 @@ auth_app.post('/getToken', (req, res) => {
     });
 });
 
+// This post will upload a file to google drive by using the token rendered from the above post
 auth_app.post('/uploadToDrive', (req, res) => {
     var incomingForm = new formidable.IncomingForm();
     incomingForm.parse(req, (error, fields, files) => {
-        console.log(files);
         if (error) {
             console.log(error);
             return res.status(400).send(error);
@@ -78,7 +77,6 @@ auth_app.post('/uploadToDrive', (req, res) => {
                 auth.setCredentials(null);
                 if (error) {
                     console.log(error);
-                    // res.status(400).send(error);
                     res.send('Token Expired')
                 }
                 else {
@@ -89,5 +87,6 @@ auth_app.post('/uploadToDrive', (req, res) => {
     })
 });
 
+// Listening to the server 
 const PORT = process.env.PORT || 5000;
 auth_app.listen(PORT, () => console.log(`Server Up in ${PORT}`));

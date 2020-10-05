@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import logo from './drive.png';
 import './App.css';
 import axios from 'axios';
-// import MessageBox from 'react-message-box'
 
 function Login() {
   const [authToken, setAuthToken] = useState(localStorage.getItem('authToken') || '');
   var params = new URLSearchParams(window.location.search);
   useEffect(() => {
     if (params.get('code') != null) {
+      // Once logged into the account and access is enabled, a token will be rendered in return by this post
       axios.post('http://localhost:5000/getToken', { 'code': params.get('code') }).then(response => {
         localStorage.setItem('authToken', JSON.stringify(response.data));
         setAuthToken(JSON.stringify(response.data))
@@ -17,6 +17,7 @@ function Login() {
   }, [authToken == '']) //useEffect works only if the condition within box brackets are correct
 
   function onLogin() {
+    // Response of this get method will contain the URL that enables the user to login to a google drive account
     axios.get('http://localhost:5000/authUrl').then(
       response => {
         console.log(response);
@@ -52,6 +53,7 @@ function Home({ token }) {
     formData.append('file', obj.target.files[0]);
     formData.append('token', token);
 
+    // Post request to upload a file into the logged in drive
     axios.post('http://localhost:5000/uploadToDrive', formData, {
       headers: {
         'Content-Type': 'paltipart/form-data'
@@ -60,24 +62,18 @@ function Home({ token }) {
       response => {
         localStorage.setItem('uploadFeedback', response.data);
         if (localStorage.getItem('uploadFeedback') == 'Successfully uploaded file') {
-          // this.refs.messageBox.alert("Alert", localStorage.getItem('uploadFeedback')).ok(() => {
           window.alert(localStorage.getItem('uploadFeedback'));
           localStorage.setItem('uploadFeedback', '');
           window.location.reload(true);
-          // });
         }
         else if (localStorage.getItem('uploadFeedback') == 'Token Expired') {
-          // this.refs.messageBox.alert("Alert", localStorage.getItem('uploadFeedback')).ok(() => {
           window.alert('Token Expired! Logging out');
           localStorage.setItem('uploadFeedback', '');
           onLogout();
-          // });
         }
       }
     );
   }
-
-  // let message = null;
 
   return (
     <div className="Home">
@@ -88,7 +84,6 @@ function Home({ token }) {
         <p>Upload File</p>
         <input type='file' name='file' onChange={(obj) => onUpload(obj)}></input>
       </header>
-      {/* {message} */}
     </div>
   );
 }
